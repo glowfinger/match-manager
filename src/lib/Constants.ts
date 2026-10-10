@@ -47,7 +47,7 @@ export const MediaImageTypes: MediaImageType[] = [
 		label: 'Lineup List',
 	},
 	{
-		type: 'highlight',
+		type: 'HIGHLIGHT',
 		label: 'Highlight',
 	},
 ];

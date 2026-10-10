@@ -1,8 +1,9 @@
 import type { Match } from '$lib/database/IndexedDB';
+import { getUploadsByMatchIdAndMediaType } from '$lib/database/match/ImageUploadDBService';
 import type { CanvasImage } from '$lib/types/Images';
 import { KIT_VALUES } from '../constants/Colours';
 import { getImageBitmap } from '../ImageCache';
-import { teamImageLoader } from './ImageLoaderUtils';
+import { sponsorImageLoader, teamImageLoader } from './ImageLoaderUtils';
 
 const RESULT_BACKGROUND_IMAGE = {
 	[KIT_VALUES.MAIN]: '/img/backgrounds/seniors/optist-ngw.png',
@@ -23,6 +24,19 @@ export default async function resultImageLoader(match: Match) {
 		images.push(await teamImageLoader(awayTeam, 'AWAY'));
 	}
 
+	const uploads = await getUploadsByMatchIdAndMediaType(match.id, 'RESULT');
+
+	const mainUpload = uploads.find((upload) => upload.uploadType === 'main');
+
+	if (mainUpload) {
+		images.push({
+			photo: await createImageBitmap(mainUpload.blob),
+			uploadType: 'UPLOAD',
+			mediaType: 'MAIN',
+			settings: mainUpload.settings,
+		});
+	}
+
 	const backgroundImage = await getImageBitmap(
 		RESULT_BACKGROUND_IMAGE[match.detail?.kit ?? KIT_VALUES.MAIN],
 	);
@@ -36,6 +50,6 @@ export default async function resultImageLoader(match: Match) {
 			zoom: 1,
 		},
 	});
-
+	images.push(...(await sponsorImageLoader(match)));
 	return images;
 }

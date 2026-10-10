@@ -13,6 +13,11 @@ export default function filterPlayers(players: Player[], search: string): Player
 		useExtendedSearch: true,
 		keys: SEARCH_KEYS,
 		threshold: SEARCH_THRESHOLD,
+		location: 0,
+		distance: 100,
+		includeMatches: true,
+		includeScore: true,
+		ignoreDiacritics: true,
 	});
 
 	const results = fuse.search(search);

@@ -12,6 +12,10 @@
 	import matchCanvasRenderer from '$lib/canvas/renderers/MatchCanvasRenderer';
 	import { goto } from '$app/navigation';
 	import { MediaImageTypes } from '$lib/Constants';
+	import { page } from '$app/state';
+	import type { MatchImage } from '$lib/database/IndexedDB';
+	import { getFonts } from '$lib/database/FontDBService';
+	import canvasFontLoader from '$lib/canvas/images/CanvasFontLoader';
 
 	let canvas: HTMLCanvasElement | undefined = $state();
 	let canvasImages: CanvasImage[] = $state([]);
@@ -21,9 +25,10 @@
 	let matchTile = props.data.matchTile;
 	let match = props.data.match;
 	let mediaType = props.params.mediaType as string;
-
+	let pageNo = $derived(parseInt(page.url.searchParams.get('page') ?? '1'));
 	let WIDTH = $state(1080);
 	let HEIGHT = $state(1350);
+	let image: Omit<MatchImage, 'id'> | undefined = $state();
 
 	const mediaLabel = MediaImageTypes.find((m) => m.type === mediaType)?.label;
 	if (!mediaLabel) {
@@ -46,10 +51,17 @@
 		if (!canvas) {
 			return;
 		}
+
+		await canvasFontLoader();
 		canvasImages = await canvasImageLoader(match, mediaType);
 		const images = await matchCanvasRenderer(canvas, match, mediaType, canvasImages);
 		await Promise.all(images.map(async (image) => await setMatchImage(image)));
-		goto(`/match/${matchId}/media/${mediaType}`);
+
+		if (pageNo) {
+			image = images[pageNo - 1];
+		}
+
+		// goto(`/match/${matchId}/media/${mediaType}`);
 	});
 
 	onDestroy(() => {
@@ -71,14 +83,19 @@
 <Breadcrumb {breadcrumbs} />
 <HeadingLg>Render</HeadingLg>
 
-<div class="aspect-4/5 h-full overflow-x-scroll">
+{#if pageNo}
+	<HeadingMd>Page {pageNo}</HeadingMd>
+{/if}
+
+<div class=" overflow-x-scroll">
 	<canvas bind:this={canvas} width={WIDTH} height={HEIGHT} class="w-full border border-slate-900"
 	></canvas>
 </div>
 
-<HeadingMd>Manage</HeadingMd>
-<ul role="list" class="grid grid-cols-4 gap-2">
-	{#each LINKS as link}
-		<LinkCard {link} />
-	{/each}
-</ul>
+{#if image}
+	<img
+		src={image.base64}
+		alt={image.type}
+		class="transform transition-transform duration-300 hover:scale-105 hover:opacity-75"
+	/>
+{/if}

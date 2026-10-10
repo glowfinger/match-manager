@@ -49,12 +49,13 @@
 			selections.some((selection) => selection.playerKey === player.key),
 		);
 
+		matchPositions = await getMatchPositions(matchId);
+		console.log(matchPositions);
+
 		const key = SHIRT_NUMBERS.get(position) as string;
 		mains = players.filter((player) => isMainPosition(player, key));
 		secondary = players.filter((player) => isOtherPosition(player, key));
 		not = players.filter((player) => !isMainPosition(player, key) && !isOtherPosition(player, key));
-
-		matchPositions = await getMatchPositions(matchId);
 	});
 
 	const breadcrumbs = [
@@ -128,6 +129,20 @@
 		{/each}
 	</CardList>
 	<HeadingMd>Unfavoured</HeadingMd>
+	<CardList>
+		{#each not as player}
+			<PlayerCard {player}>
+				<PositionActions
+					{player}
+					handleStart={() => handleStart(player.key)}
+					{matchPositions}
+					{matchId}
+					{position}
+				/>
+			</PlayerCard>
+		{/each}
+	</CardList>
+	<HeadingMd>Selected</HeadingMd>
 	<CardList>
 		{#each not as player}
 			<PlayerCard {player}>

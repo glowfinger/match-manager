@@ -7,6 +7,10 @@ import { betterAuth } from 'better-auth';
 
 export const auth = betterAuth({
 	secret: BETTER_AUTH_SECRET,
+	session:{
+		expiresIn: 60 * 60 * 24 * 30, 
+		updateAge: 60 * 60 * 24,
+	},
 	socialProviders: {
 		google: {
 			clientId: AUTH_GOOGLE_CLIENT_ID || '',

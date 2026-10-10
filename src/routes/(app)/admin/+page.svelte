@@ -100,4 +100,5 @@
 >
 
 <a href="/players" class="variant-filled-primary btn">View players</a>
+<a href="players/load" class="variant-filled-primary btn">Load players</a>
 <a href="/clubs" class="variant-filled-primary btn">View Clubs</a>

@@ -3,7 +3,7 @@ import { getUploadsByMatchIdAndMediaType } from '$lib/database/match/ImageUpload
 import type { CanvasImage } from '$lib/types/Images';
 import { KIT_VALUES } from '../constants/Colours';
 import { getImageBitmap } from '../ImageCache';
-import { playerHeadshotLoader, teamBadgeLoader } from './ImageLoaderUtils';
+import { playerHeadshotLoader, sponsorImageLoader, teamBadgeLoader } from './ImageLoaderUtils';
 
 const KIT_BACKGROUND_IMAGE = {
 	[KIT_VALUES.MAIN]: '/img/backgrounds/seniors/senior-gold-4-panel-basic.png',
@@ -60,6 +60,6 @@ export default async function lineupImageLoader(match: Match): Promise<CanvasIma
 
 	images.push(...(await teamBadgeLoader(match)));
 	images.push(...(await playerHeadshotLoader(match)));
-	console.log(images);
+	images.push(...(await sponsorImageLoader(match)));
 	return images;
 }

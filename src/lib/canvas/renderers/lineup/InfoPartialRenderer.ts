@@ -1,13 +1,10 @@
 import { Colours } from '$lib/Constants';
-import { getMatch } from '$lib/database/MatchService';
 import { convertTime, matchDate } from '$lib/helpers/dateTime/ConvertTime';
 
 export default async function InfoPartialRenderer(
 	ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D,
-	matchId: number,
+	match: Match,
 ): Promise<void> {
-	const match = await getMatch(matchId);
-
 	let y = 160;
 
 	if (match.team) {

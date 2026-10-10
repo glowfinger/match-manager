@@ -1,4 +1,4 @@
-import { Colours, UploadImageTypes } from '$lib/Constants';
+import { Colours } from '$lib/Constants';
 import type { Match, MatchImage } from '$lib/database/IndexedDB';
 import { getMatchRolesByType } from '$lib/database/MatchRoleDBService';
 import { getPlayersByKeys } from '$lib/database/PlayerDBService';
@@ -30,27 +30,40 @@ export default async function resultRender(
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 	const backgroundImage = images.find((image) => image.uploadType === 'BACKGROUND');
+
 	if (backgroundImage) {
-		ctx.drawImage(backgroundImage.photo, 0, 0, canvas.width, canvas.height);
+		ctx.drawImage(
+			backgroundImage.photo,
+			0,
+			675,
+			canvas.width,
+			675,
+			0,
+			675,
+			canvas.width,
+			canvas.height,
+		);
 	}
 
-	const mainImage = images.find((image) => image.uploadType === UploadImageTypes.MAIN);
+	const mainImage = images.find(getMainImage);
 
 	if (mainImage) {
 		const destination = { width: 1080, height: 675, x: 0, y: 0 };
+
+		const source = { width: mainImage.photo.width, height: mainImage.photo.height, x: 0, y: 0 };
 
 		await photoDrawer(
 			ctx as CanvasRenderingContext2D,
 			mainImage.photo,
 			destination,
-			{ width: mainImage.photo.width, height: mainImage.photo.height, x: 0, y: 0 },
+			source,
 			mainImage.settings.zoom,
 			mainImage.settings.x,
 			mainImage.settings.y,
 		);
 	}
 
-	const img = await getImageBitmap('/img/photos/sully-loss.png');
+	const img = await getImageBitmap('/img/photos/boag-motm.png');
 	ctx.drawImage(img, 0, 0);
 	if (match.detail?.venue === 'HOME') {
 		{
@@ -162,11 +175,13 @@ export default async function resultRender(
 		ctx.fillText(awayString, 540 + 220, centerHeight);
 	}
 
+
 	const awards = await getMatchRolesByType(match.id, 'awards');
 	const players = await getPlayersByKeys(awards.map((s) => s.playerKey));
 
 	const forwardsAwards = awards.find((s) => s.role === 'forwards-motm');
 	const backsAwards = awards.find((s) => s.role === 'backs-motm');
+	const motmAwards = awards.find((s) => s.role === 'motm');
 
 	if (forwardsAwards && backsAwards) {
 		const img = await getImageBitmap('/img/photos/1xv-worth1.png');
@@ -216,6 +231,29 @@ export default async function resultRender(
 		}
 	}
 
+	if (motmAwards) {
+		const nameY = 1160;
+		const player = players.find((s) => s.key === motmAwards.playerKey);
+
+		if (player) {
+			ctx.textAlign = 'center';
+			ctx.font = `54px black`;
+			ctx.fillStyle = Colours.WHITE;
+			ctx.strokeStyle = Colours.NAVY;
+
+			ctx.strokeText(player.bio.screen, 540, nameY + 60);
+			ctx.fillText(player.bio.screen, 540, nameY + 60);
+
+			const awardText = 'MOTM';
+			ctx.textAlign = 'center';
+			ctx.font = `48px semiBold`;
+			ctx.fillStyle = Colours.GOLD;
+			ctx.strokeStyle = Colours.NAVY;
+			ctx.lineWidth = 8;
+			ctx.strokeText(awardText, 540, nameY + 120);
+			ctx.fillText(awardText, 540, nameY + 120);
+		}
+	}
 	await drawSponsorsVertical(ctx, 1080 - 60 - 150, 60, match, images);
 
 	return (await canvasSplitter(canvas as OffscreenCanvas)).map(({ page, base64 }) => ({
@@ -225,4 +263,8 @@ export default async function resultRender(
 		base64,
 		createdAt: new Date().toISOString(),
 	}));
+}
+
+function getMainImage(image: CanvasImage): unknown {
+	return image.uploadType === 'UPLOAD' && image.mediaType === 'MAIN';
 }

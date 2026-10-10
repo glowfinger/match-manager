@@ -17,7 +17,7 @@ async function load() {
 
 	const sheets = google.sheets({ version: 'v4', auth: client as any });
 
-	const [playerResponse, images, tagResponse, unavailableIds] = await Promise.all([
+	const [playerResponse, images, tagResponse, unavailableIds, homegrownIds] = await Promise.all([
 		sheets.spreadsheets.values
 			.get({ spreadsheetId: SPREADSHEET_ID, range: 'Form responses 1' })
 			.then(handleResponse),
@@ -36,7 +36,12 @@ async function load() {
 		sheets.spreadsheets.values
 			.get({ spreadsheetId: SPREADSHEET_ID, range: 'unavailable' })
 			.then(handleListResponse),
+		sheets.spreadsheets.values
+			.get({ spreadsheetId: SPREADSHEET_ID, range: 'homegrown' })
+			.then(handleResponse)
+			.then(homegrownIdsMapper),
 	]);
+
 
 	const players: any[] = playerResponse
 		.map(rowToPlayer)
@@ -63,6 +68,11 @@ async function load() {
 			} else {
 				player.tags = { homegrown: false };
 			}
+
+			if (homegrownIds.includes(player.key)) {
+				player.tags.homegrown = true;
+			}
+
 			return player;
 		});
 	return { players };
@@ -155,4 +165,8 @@ function handleListResponse(response: { data: { values: string[][] } } | any) {
 	const values = response.data.values;
 
 	return values.map((value: string[]) => value[0].trim());
+}
+
+function homegrownIdsMapper(values: string[][]): string[] {
+	return values.map((value: string[]) => getPlayerKey(value));
 }

@@ -1,7 +1,3 @@
-import cancelledRender from '$lib/canvas/renderers/CancelledRenderer';
-import HighlightRenderer from '$lib/canvas/renderers/HighlightRenderer';
-import LineupListRenderer from '$lib/canvas/renderers/LineupListRenderer';
-import LineupRederer from '$lib/canvas/renderers/LineupRenderer';
 // import LineupAlternative from '$lib/constants/lineup/LineupAlternative';
 import { getFonts } from '$lib/database/FontDBService';
 import type { MatchImage } from '$lib/database/IndexedDB';
@@ -23,35 +19,35 @@ onmessage = async ({ data }: MessageEvent) => {
 
 	await deleteMatchImagesByType(data.matchId, data.type);
 	console.timeLog('ImageWorker');
-	let images: Omit<MatchImage, 'id'>[] = [];
-	if (data.type === 'MATCH') {
-		// const cachedImages = await preloadMatchImages(data.matchId);
-		// console.log(cachedImages);
-		// images = await matchRenderer(new OffscreenCanvas(1080, 1350), data.matchId, data.type);
-		console.timeLog('ImageWorker');
-	}
-	if (data.type === 'CANCELLED') {
-		images = await cancelledRender(data.matchId, data.type);
-	}
-	if (data.type === 'RESULT') {
-		// images = await resultRender(data.matchId, data.type);
-	}
-	if (data.type === 'LINEUP') {
-		// await preloadImages(LineupAlternative);
-		images = await LineupRederer(data.matchId, data.type);
-		postMessage({ task: 'IMAGES_GENERATED', type: data.type });
-	}
-	if (data.type === 'LINEUP_LIST') {
-		images = await LineupListRenderer(data.matchId, data.type);
-		postMessage({ task: 'IMAGES_GENERATED', type: data.type });
-	}
-	if (data.type === 'highlight') {
-		images = await HighlightRenderer(data.matchId, data.type);
-	}
-	if (!images.length) {
-		postMessage({ task: 'NO_IMAGES_GENERATED', type: data.type });
-		return;
-	}
+	// let images: Omit<MatchImage, 'id'>[] = [];
+	// if (data.type === 'MATCH') {
+	// 	// const cachedImages = await preloadMatchImages(data.matchId);
+	// 	// console.log(cachedImages);
+	// 	// images = await matchRenderer(new OffscreenCanvas(1080, 1350), data.matchId, data.type);
+	// 	console.timeLog('ImageWorker');
+	// }
+	// if (data.type === 'CANCELLED') {
+	// 	images = await cancelledRender(data.matchId, data.type);
+	// }
+	// if (data.type === 'RESULT') {
+	// 	// images = await resultRender(data.matchId, data.type);
+	// }
+	// if (data.type === 'LINEUP') {
+	// 	// await preloadImages(LineupAlternative);
+	// 	images = await LineupRederer(data.matchId, data.type);
+	// 	postMessage({ task: 'IMAGES_GENERATED', type: data.type });
+	// }
+	// if (data.type === 'LINEUP_LIST') {
+	// 	images = await LineupListRenderer(data.matchId, data.type);
+	// 	postMessage({ task: 'IMAGES_GENERATED', type: data.type });
+	// }
+	// if (data.type === 'highlight') {
+	// 	images = await HighlightRenderer(data.matchId, data.type);
+	// }
+	// if (!images.length) {
+	// 	postMessage({ task: 'NO_IMAGES_GENERATED', type: data.type });
+	// 	return;
+	// }
 	console.timeLog('ImageWorker');
 	await saveImages(images);
 	console.timeLog('ImageWorker');
