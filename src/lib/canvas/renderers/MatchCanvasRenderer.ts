@@ -2,6 +2,7 @@ import type { Match, MatchImage } from '$lib/database/IndexedDB';
 import type { CanvasImage } from '$lib/types/Images';
 import canvasSplitter from './CanvasSplitter';
 import highlightRenderer from './HighlightRenderer';
+import LineupListRenderer from './LineupListRenderer';
 import LineupRenderer from './LineupRenderer';
 import matchRenderer from './MatchRenderer';
 import resultRender from './ResultRenderer';
@@ -31,6 +32,12 @@ export default async function matchCanvasRenderer(
 		canvas.width = 1080 * 4;
 		canvas.height = 1350;
 		await LineupRenderer(canvas, match, canvasImages);
+	}
+
+	if (mediaType === 'LINEUP_LIST') {
+		canvas.width = 1080;
+		canvas.height = 1350;
+		await LineupListRenderer(canvas, match, canvasImages);
 	}
 
 	if (mediaType === 'RESULT') {

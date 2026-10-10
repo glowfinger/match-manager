@@ -1,16 +1,14 @@
 import headshotLoader from '$lib/canvas/images/HeadshotLoader';
 import { drawSmallTitle, drawVersusTitle } from '$lib/canvas/TextDrawer';
 import { Colours } from '$lib/Constants';
-import type { Match } from '$lib/database/IndexedDB';
-import { getMatchPositions } from '$lib/database/MatchPositionDBService';
+import type { Match, Player } from '$lib/database/IndexedDB';
 import { getMatchRolesByType } from '$lib/database/MatchRoleDBService';
 import { getMatchTags } from '$lib/database/MatchTagDBService';
-import { getPlayersByKeys } from '$lib/database/PlayerDBService';
-import { getYesSelectionsByMatchId } from '$lib/database/SelectionDBService';
+import type { CanvasImage } from '$lib/types/Images';
 
 const TITLE = 'FINISHERS';
 
-const ROW_Y1 = 220;
+const ROW_Y1 = 0;
 const ROW_Y2 = ROW_Y1 + 300;
 const ROW_Y3 = ROW_Y2 + 300;
 
@@ -27,31 +25,27 @@ const COORDS = [
 	{ x: COLUMN_X4, y: ROW_Y1 },
 	{ x: COLUMN_X4, y: ROW_Y2 },
 	{ x: COLUMN_X2, y: ROW_Y2 },
+	{ x: COLUMN_X4, y: ROW_Y3 },
+	{ x: COLUMN_X2, y: ROW_Y3 },
 ];
 
 export default async function finisherListPartialRenderer(
 	ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D,
 	match: Match,
+	offsetX: number,
+	players: Player[],
+	images: CanvasImage[],
 ): Promise<void> {
-	const selections = await getYesSelectionsByMatchId(match.id);
-	const positions = (await getMatchPositions(match.id)).map((p) => p.playerKey);
-
-	const finishers = selections.filter(({ playerKey }) => !positions.includes(playerKey));
-	const players = await getPlayersByKeys(finishers.map((s) => s.playerKey));
+	console.log('fired');
 
 	const debuts = (await getMatchTags(match.id, 'debut')).map((t) => t.playerKey);
 	const leadershipRoles = await getMatchRolesByType(match.id, 'leadership');
-
-	// {
-	// 	const img = await getImageBitmap('/img/photos/stollery-hickson.png');
-	// 	ctx.drawImage(img, 1080 * 3, 0);
-	// }
 
 	const x = 1080 + 1080 + 1080 + 60;
 	drawSmallTitle(ctx, TITLE, x, 120);
 	drawVersusTitle(ctx, `vs ${match.opponent?.club ?? ''}`, x, 180);
 
-	const coords = players.length == 2 ? [COORDS[0], COORDS[2]] : COORDS;
+	const coords = getCoords(players.length);
 	for (const [i, coord] of coords.entries()) {
 		const player = players[i];
 		if (!player) {
@@ -89,9 +83,9 @@ export default async function finisherListPartialRenderer(
 		}
 
 		if (name.length > 0) {
-			name = name + ' ' + player.bio.last;
+			name = name + ' ' + player.bio.screen;
 		} else {
-			name = player.bio.last;
+			name = player.bio.screen;
 		}
 
 		// TODO unnest the ifs
@@ -107,4 +101,23 @@ export default async function finisherListPartialRenderer(
 
 		ctx.fillText(name, x + 130, y + 260 - 10);
 	}
+}
+
+function getCoords(length: number) {
+	if (length === 2) {
+		return [COORDS[0], COORDS[2]];
+	}
+
+	if (length === 3) {
+		const OFFSET_Y = -140;
+		return [
+			{ x: COLUMN_X4, y: ROW_Y2 },
+			{ x: COLUMN_X2, y: ROW_Y2 },
+			{ x: COLUMN_X3, y: ROW_Y3 },
+		].map(({ x, y }) => {
+			return { x: x, y: y + OFFSET_Y };
+		});
+	}
+
+	return COORDS;
 }

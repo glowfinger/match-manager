@@ -12,26 +12,13 @@ import { drawBadges } from '../drawers/BadgeDrawer';
 import nameTagDrawer from '../drawers/NameTagDrawer';
 import photoDrawer from '../drawers/PhotoDrawer';
 import { drawSponsors, drawSponsorsVertical } from '../drawers/SponsorsDrawer';
-import { getImageBitmap } from '../ImageCache';
 import { drawSmallTitle, drawVersusTitle } from '../TextDrawer';
 import canvasSplitter from './CanvasSplitter';
+import finisherListPartialRenderer from './lineup/FinisherListPartialRenderer';
 import finishersPartialRenderer from './lineup/FinishersPartialRenderer';
 import InfoPartialRenderer from './lineup/InfoPartialRenderer';
 
-const layouts: Record<number, { x: number; y: number }[]> = {
-	1: [{ x: 410, y: 1080 }],
-	2: [
-		{ x: 1080, y: 1080 },
-		{ x: 1080, y: 1080 },
-	],
-	3: [
-		{ x: 60, y: 1080 },
-		{ x: 410, y: 1080 },
-		{ x: 760, y: 1080 },
-	],
-};
-
-const showShortName = true;
+const showShortName = false;
 
 export default async function LineupRenderer(
 	canvas: HTMLCanvasElement | OffscreenCanvas,
@@ -63,11 +50,7 @@ export default async function LineupRenderer(
 	);
 
 	// This ordering should be loaded from the database
-	const finishers = [
-		'fred-howells-07112025094757',
-		'evan-lindsay-07032025093846',
-		'harry-mclaughlin-03092024181106',
-	].map((f) => finishersLoaded.find((p) => p.key === f));
+	const finishers = finishersLoaded;
 
 	if (match.detail) {
 		ctx.fillStyle = KIT_BACKGROUND[match.detail?.kit ?? KIT_VALUES.MAIN];
@@ -114,6 +97,7 @@ export default async function LineupRenderer(
 	// // // aysnc loop
 	for (const i of StarterPositons) {
 		const position = positions.find((s) => s.position === i.number);
+
 		if (!position) {
 			continue;
 		}
@@ -144,29 +128,27 @@ export default async function LineupRenderer(
 		}
 
 		const name = generateName(player, debuts, showShortName, leadershipRoles);
-		nameTagDrawer(ctx as CanvasRenderingContext2D, name, x, y + 260 - 40);
+		nameTagDrawer(ctx as CanvasRenderingContext2D, name, x - 20, y + 260 - 40);
 	}
 
 	await drawBadges(ctx, match, 60, 460, images);
 
-	// Finishers
-
-	{
-		const img = await getImageBitmap('/img/photos/def-evan-def.png');
-		ctx.drawImage(img, 1080 * 3, 0);
-	}
-
 	const offsetX = 1080 + 1080 + 1080;
-	await finishersPartialRenderer(ctx, match, offsetX, finishers, images);
 
-	// await finisherListPartialRenderer(ctx, match);
+	console.log(finishers, finishers.length);
 
-	const layout = layouts[finishers.length] ?? [];
-	for (const [i, player] of finishers.entries()) {
-		const { x, y } = layout[i];
-		const name = generateName(player, debuts, showShortName, leadershipRoles);
-		nameTagDrawer(ctx as CanvasRenderingContext2D, name, x + offsetX, y);
+	if (finishers.length > 0 && finishers.length <= 3) {
+		await finishersPartialRenderer(ctx, match, offsetX, finishers, images);
 	}
+
+	await finisherListPartialRenderer(ctx, match, offsetX, finishers, images);
+
+	// const layout = layouts[finishers.length] ?? [];
+	// for (const [i, player] of finishers.entries()) {
+	// 	const { x, y } = layout[i];
+	// 	const name = generateName(player, debuts, showShortName, leadershipRoles);
+	// 	nameTagDrawer(ctx as CanvasRenderingContext2D, name, x + offsetX, y);
+	// }
 
 	const legend = legendText(finishers, debuts);
 	// const legend = '🍟 Home Grown';
